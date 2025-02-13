@@ -44,6 +44,7 @@
         max-width: 350px;
         max-height: 50px;
         color: #FFF;
+        opacity: .2;
         background-color: rgba(3, 52, 110, 0.7);
         font-size: 24px;
         border: none;
@@ -52,9 +53,14 @@
         &:hover {
             background-color: #6EACDA;
         }
+
+        &.visible {
+            opacity: 1;
+        }
     }
 
-    .video-container {
+    .video-container,
+    .canvas-container {
         margin: 0 auto;
         padding: 50px 0;
         display: flex;
@@ -63,9 +69,10 @@
         max-width: 1140px;
         max-height: 560px;
         background: rgba(3, 52, 110, 0.1);
-        transition: height .5s ease-in-out;
+        transition: all .5s ease-in-out;
 
-        video {
+        video,
+        canvas {
             margin: 0 auto;
         }
     }

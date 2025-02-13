@@ -6,8 +6,9 @@ let movenet = undefined;
 
 //Ruta al modelo de Teachable Machine
 const URL = "http://127.0.0.1:5500/Modelo/";
-//Almacenamos ref al HTMLElement d video 
+//Almacenamos ref al HTMLElement d video y el canvas
 const video = document.getElementById('videoElement');
+const canvas = document.getElementById('canvasPicture');
 
 //Creamos el modelo d Teachable Machine q guardamos en local
 async function createModel() {
@@ -22,6 +23,7 @@ async function createModel() {
 
     // check that model and metadata are loaded via HTTPS requests.
     await recognizer.ensureModelLoaded().then(
+        document.getElementById('allowAccess').classList.add('visible'),
         console.log('Modelo Creado')
     );
 
@@ -51,21 +53,25 @@ async function init() {
 
             //Nos aseguramos q tiene una certeza decente para hacer la foto
             if (result.scores[i].toFixed(2) > 0.7) {
-                switch (classPrediction) {
+                switch (classLabels[i]) {
                     case "Preparados":
                         console.log('La palabra detectada es Preparados');
+                        readText('Preparados');
                         break;
                     case "Preparado":
                         console.log('La palabra detectada es Preparado');
+                        readText('Preparados');
                         break;
                     case "Foto":
                         console.log('La palabra detectada es Foto');
+                        readText('Foto');
                         break;
                     case "Ruido de fondo":
                         console.log('La palabra detectada es Ruido de fondo');
                         break;
                     default:
                         console.log('Default, Ni idea q ha detectado');
+                        break;
                 }
             }
         }
@@ -107,5 +113,50 @@ async function getAudioAndWebcam() {
 async function loadMovenet() {
     //Lo cargamos dsd TensorFlow Hub
     movenet = await tf.loadGraphModel(MOVENET_PATH, {fromTFHub: true});
-
 }
+
+async function takePhoto() {
+    console.log('tomando fotooooo :)))');
+
+    const ctxCanvas = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctxCanvas.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+function readText(type) {
+let message = '';
+    switch(type) {
+        case "Foto":
+            message = 'Patata';
+            break;
+        case "Preparados":
+            message = 'listos ya ¡Patata!';
+            break;
+        default:
+            message = 'Error perooo di patata';
+            break;
+    }
+
+    //Creamos el obj d síntesis d voz
+    const readText = new SpeechSynthesisUtterance(message);
+
+    //configuramos las opciones
+    readText.lang = 'es-ES';
+    readText.rate = .85;
+    readText.pitch = 1;
+    readText.volume = 1;
+
+    speechSynthesis.speak(readText);
+
+    readText.onend = () => {
+        if(type === 'Preparados') {
+            setTimeout(() => {
+                takePhoto();
+            }, 3000);
+        } else {
+            takePhoto();
+        }
+    }
+}
+
