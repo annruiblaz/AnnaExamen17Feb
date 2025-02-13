@@ -1,5 +1,5 @@
 //Import de MoveNet
-const MOVENET_PATH = 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4';
+const MODEL_PATH = 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4';
 
 //Declaramos la variable global para almacenar el modelo
 let movenet = undefined;
@@ -9,6 +9,17 @@ const URL = "http://127.0.0.1:5500/Modelo/";
 //Almacenamos ref al HTMLElement d video y el canvas
 const video = document.getElementById('videoElement');
 const canvas = document.getElementById('canvasPicture');
+const CROPPED_CANVAS = document.getElementById('croppedCanvas');
+
+
+
+//Carga e inicializa el modelo d MoveNet
+async function loadMovenet() {
+    //Lo cargamos dsd TensorFlow Hub x eso el true
+    movenet = await tf.loadGraphModel(MODEL_PATH, {fromTFHub: true});
+}
+
+loadMovenet();
 
 //Creamos el modelo d Teachable Machine q guardamos en local
 async function createModel() {
@@ -109,10 +120,35 @@ async function getAudioAndWebcam() {
     getAccessWebcam();
 }
 
-//carga e inicializa el modelo d MoveNet
-async function loadMovenet() {
-    //Lo cargamos dsd TensorFlow Hub
-    movenet = await tf.loadGraphModel(MOVENET_PATH, {fromTFHub: true});
+async function makeImgTensor() {
+    //Primero le indicamos el batch (q solo va a procesar 1 img a la vez)
+    //La transformamos a 192x192 para q movenet puede trabajar con la img
+    // Le pasamos los 3 canales d color (RGB)
+    console.log('Canvas');
+    //Creamos un tensor con la img q ya está almacenada en el canvas
+    let imgInputTensor = tf.browser.fromPixels(canvas);
+    console.log('Forma del tensor de la imagen: ', imgInputTensor.shape); // [480, 640, 3]
+
+    //Recortamos la img para q cuadre con el formato esperado x movenet [1, 192, 192, 3]
+    //Establecemos el punto d incio para el recorte d la img [y, x, canal] (El canal está a 0 xq queremos q incluya los 3 canales)
+    let cropStartPoint = [15, 170, 0];
+    //Asignamos el tamaño del recorte [alto, ancho, canales]
+    let cropSize = [345, 345, 3];
+
+    //Slice recorta la img dsd el punto de incicio utilizando el tamaño definido
+    let croppedTensor = tf.slice(imgInputTensor, cropStartPoint, cropSize);
+
+    //Como la img continua siendo muy grande, le aplicamos un resizeBilinear
+    let resizedTensor = tf.image.resizeBilinear(croppedTensor, [192, 192], true).toInt();
+    console.log('Img en tensor con su resize:', resizedTensor.shape);
+
+    if(movenet != undefined) {
+    //Expandimos las dimensiones para añadir la q falta al comienzo
+    let tensorOutput = movenet.predict(tf.expandDims(resizedTensor));
+    //Convertimos la salida del modelo en un array para visualizar los results
+    let arrayOutput = await tensorOutput.array();
+    console.log('Predicciones Output array: ', arrayOutput);
+    }
 }
 
 async function takePhoto() {
@@ -122,9 +158,11 @@ async function takePhoto() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctxCanvas.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    makeImgTensor()
 }
 
-function readText(type) {
+async function readText(type) {
 let message = '';
     switch(type) {
         case "Foto":
