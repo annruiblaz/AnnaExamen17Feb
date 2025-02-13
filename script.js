@@ -1,12 +1,15 @@
-// more documentation available at
-// https://github.com/tensorflow/tfjs-models/tree/master/speech-commands
+//Import de MoveNet
+const MOVENET_PATH = 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/lightning/4';
 
-// the link to your model provided by Teachable Machine export panel
+//Declaramos la variable global para almacenar el modelo
+let movenet = undefined;
+
+//Ruta al modelo de Teachable Machine
 const URL = "http://127.0.0.1:5500/Modelo/";
-
 //Almacenamos ref al HTMLElement d video 
 const video = document.getElementById('videoElement');
 
+//Creamos el modelo d Teachable Machine q guardamos en local
 async function createModel() {
     const checkpointURL = URL + "model.json"; // model topology
     const metadataURL = URL + "metadata.json"; // model metadata
@@ -27,6 +30,7 @@ async function createModel() {
 
 createModel();
 
+//Inicializa el modelo de comandos d voz (una vez creado)
 async function init() {
     const recognizer = await createModel();
     const classLabels = recognizer.wordLabels(); // get class labels
@@ -45,6 +49,7 @@ async function init() {
             const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
             labelContainer.childNodes[i].innerHTML = classPrediction;
 
+            //Nos aseguramos q tiene una certeza decente para hacer la foto
             if (result.scores[i].toFixed(2) > 0.7) {
                 switch (classPrediction) {
                     case "Preparados":
@@ -75,6 +80,7 @@ async function init() {
     // setTimeout(() => recognizer.stopListening(), 5000);
 }
 
+//Para acceder a la webcam y audio
 async function getAccessWebcam() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
@@ -91,7 +97,15 @@ async function getAccessWebcam() {
     console.error('Tu navegador no es compatible.');
 }
 
+//inicializa la webcam y el modelo d comandos d voz
 async function getAudioAndWebcam() {
     init();
     getAccessWebcam();
+}
+
+//carga e inicializa el modelo d MoveNet
+async function loadMovenet() {
+    //Lo cargamos dsd TensorFlow Hub
+    movenet = await tf.loadGraphModel(MOVENET_PATH, {fromTFHub: true});
+
 }

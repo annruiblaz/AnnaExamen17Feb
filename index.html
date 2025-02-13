@@ -6,23 +6,25 @@
         <title>Examen Anna :)</title>
         <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
-        <link rel="styles/css" href="styles.css">
+        <link rel="stylesheet" href="styles.css">
     </head>
 
     <body>
         <div class="container">
             <!--Visualizamos la img d la webcam-->
 
-            <div class="header">
+            <div class="header-container">
                 <h1 class="header-title">Captura foto con IA y comandos de voz</h1>
                 <h2 class="header-subtitle">Di "Preparados" o "Foto" y deja que la magia suceda.</h2>
                 <p class="header-extra-info">
                     <span class="extra-info-title">
                         ¿En qué consiste?
                     </span>
+                    <br>
                     Es un proyecto que combina el uso de IA para el reconocimiento de comandos por voz y procesamiento de imágenes.
                 </p>
 
+                <div id="label-container"></div>
                 <button id="allowAccess" onclick="getAudioAndWebcam()">Activar micrófono y cámara</button>
             </div>
 
@@ -35,7 +37,6 @@
             </div>
         </div>
 
-        <div id="label-container"></div>
 
         <script src="script.js"></script>
     </body>
