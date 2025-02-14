@@ -8,7 +8,7 @@ let movenet = undefined;
 const URL = "http://127.0.0.1:5500/Modelo/";
 //Almacenamos ref al HTMLElement d video y el canvas
 const video = document.getElementById('videoElement');
-const canvas = document.getElementById('canvasPicture');
+const ORIGINAL_CANVAS = document.getElementById('canvasPicture');
 const CROPPED_CANVAS = document.getElementById('croppedCanvas');
 
 
@@ -126,8 +126,8 @@ async function makeImgTensor() {
     // Le pasamos los 3 canales d color (RGB)
     console.log('Canvas');
     //Creamos un tensor con la img q ya está almacenada en el canvas
-    let imgInputTensor = tf.browser.fromPixels(canvas);
-    console.log('Forma del tensor de la imagen: ', imgInputTensor.shape); // [480, 640, 3]
+    let imgTensor = tf.browser.fromPixels(ORIGINAL_CANVAS);
+    console.log('Forma del tensor de la imagen: ', imgTensor.shape); // [480, 640, 3]
 
     //Recortamos la img para q cuadre con el formato esperado x movenet [1, 192, 192, 3]
     //Establecemos el punto d incio para el recorte d la img [y, x, canal] (El canal está a 0 xq queremos q incluya los 3 canales)
@@ -136,11 +136,15 @@ async function makeImgTensor() {
     let cropSize = [345, 345, 3];
 
     //Slice recorta la img dsd el punto de incicio utilizando el tamaño definido
-    let croppedTensor = tf.slice(imgInputTensor, cropStartPoint, cropSize);
+    let croppedTensor = tf.slice(imgTensor, cropStartPoint, cropSize);
+
+    //Mostramos la img recortada en el canvas
+    await tf.browser.toPixels(croppedTensor, CROPPED_CANVAS);
 
     //Como la img continua siendo muy grande, le aplicamos un resizeBilinear
     let resizedTensor = tf.image.resizeBilinear(croppedTensor, [192, 192], true).toInt();
-    console.log('Img en tensor con su resize:', resizedTensor.shape);
+    console.log('Tensor ajustado con su resize:', croppedTensor.shape);
+
 
     if(movenet != undefined) {
     //Expandimos las dimensiones para añadir la q falta al comienzo
@@ -148,18 +152,57 @@ async function makeImgTensor() {
     //Convertimos la salida del modelo en un array para visualizar los results
     let arrayOutput = await tensorOutput.array();
     console.log('Predicciones Output array: ', arrayOutput);
+
+    //Verificamos si el output d predicciones tiene keypoints
+    if( arrayOutput.length > 0 && arrayOutput[0][0]) {
+        let keypoints = arrayOutput[0][0]; //Almacenamos los keypoints
+        drawKeypoints(keypoints, CROPPED_CANVAS, cropSize[0] / 192);
+            //Mostramos la img recortada en el canvas
+        //await tf.browser.toPixels(resizedTensor, CROPPED_CANVAS);
+
+    } else {
+        console.error('No se han encontrado keypoints.');
     }
+    }
+
+    //Limpiamos los tensores
+    imgTensor.dispose();
+    croppedTensor.dispose();
+    resizedTensor.dispose();
+    //tensorOutput.dispose();
 }
+
+
+//Dibujamos los puntos clave en el canvas
+function drawKeypoints(keypoints, canvas, scale) {
+    const ctx = canvas.getContext("2d");
+    // ** ToDo: Lógica q cambie el color del punto en base a la posición d las mannos con la cabezaaaaaaaaaaaa
+    ctx.fillStyle = "red";
+    ctx.lineWidth = 2;
+
+    keypoints.forEach( point => {
+        let x = point[1] * 192 * scale;
+        let y = point[0] * 192 * scale;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    console.log('Acabo d dibujar keypoints');
+}
+
+
 
 async function takePhoto() {
     console.log('tomando fotooooo :)))');
+    
+    const ctxCanvas = ORIGINAL_CANVAS.getContext("2d");
+    ORIGINAL_CANVAS.width = video.videoWidth;
+    ORIGINAL_CANVAS.height = video.videoHeight;
+    ctxCanvas.drawImage(video, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height);
 
-    const ctxCanvas = canvas.getContext("2d");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctxCanvas.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    makeImgTensor()
+    makeImgTensor();
 }
 
 async function readText(type) {
@@ -189,9 +232,8 @@ let message = '';
 
     readText.onend = () => {
         if(type === 'Preparados') {
-            setTimeout(() => {
-                takePhoto();
-            }, 3000);
+            
+            setTimeout(takePhoto, 5000);
         } else {
             takePhoto();
         }

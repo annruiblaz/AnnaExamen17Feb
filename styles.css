@@ -76,4 +76,11 @@
             margin: 0 auto;
         }
     }
+
+    .canvas-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-height: fit-content;
+    }
 }
