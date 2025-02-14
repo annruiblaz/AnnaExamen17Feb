@@ -149,6 +149,7 @@ async function makeImgTensor() {
     if(movenet != undefined) {
     //Expandimos las dimensiones para añadir la q falta al comienzo
     let tensorOutput = movenet.predict(tf.expandDims(resizedTensor));
+    console.log('Predicciones tensorOutput:', tensorOutput);
     //Convertimos la salida del modelo en un array para visualizar los results
     let arrayOutput = await tensorOutput.array();
     console.log('Predicciones Output array: ', arrayOutput);
@@ -177,8 +178,19 @@ async function makeImgTensor() {
 function drawKeypoints(keypoints, canvas, scale) {
     const ctx = canvas.getContext("2d");
     // ** ToDo: Lógica q cambie el color del punto en base a la posición d las mannos con la cabezaaaaaaaaaaaa
-    ctx.fillStyle = "red";
+    ctx.fillStyle = "#4F9D69";
     ctx.lineWidth = 2;
+
+    console.log('Posición Ojo izq' , keypoints[1]);
+    console.log('Posición Ojo dch' , keypoints[2]);
+    console.log('Posición nariz' , keypoints[0]);
+    console.log('Posición muñeca izq' , keypoints[9]);
+    console.log('Posición muñeca derecha' , keypoints[10]);
+
+    if(keypoints[9][0] <= keypoints[2][0] || keypoints[10][0] <= keypoints[1][0]) {
+        console.log('Manos encima cabeza');
+        ctx.fillStyle = "#D84654";
+    }
 
     keypoints.forEach( point => {
         let x = point[1] * 192 * scale;
@@ -232,7 +244,6 @@ let message = '';
 
     readText.onend = () => {
         if(type === 'Preparados') {
-            
             setTimeout(takePhoto, 5000);
         } else {
             takePhoto();
