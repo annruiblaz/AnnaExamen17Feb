@@ -7,7 +7,8 @@ let movenet = undefined;
 //Ruta al modelo de Teachable Machine
 const URL = "http://127.0.0.1:5500/Modelo/";
 //Almacenamos ref al HTMLElement d video y el canvas
-const video = document.getElementById('videoElement');
+const VIDEO_ELEMENT = document.getElementById('videoElement');
+const VIDEO_OVERLAY = document.getElementById('videoOverlay');
 const ORIGINAL_CANVAS = document.getElementById('canvasPicture');
 const CROPPED_CANVAS = document.getElementById('croppedCanvas');
 
@@ -34,8 +35,7 @@ async function createModel() {
 
     // check that model and metadata are loaded via HTTPS requests.
     await recognizer.ensureModelLoaded().then(
-        document.getElementById('allowAccess').classList.add('visible'),
-        console.log('Modelo Creado')
+        document.getElementById('allowAccess').classList.add('visible')
     );
 
     return recognizer;
@@ -66,22 +66,17 @@ async function init() {
             if (result.scores[i].toFixed(2) > 0.7) {
                 switch (classLabels[i]) {
                     case "Preparados":
-                        console.log('La palabra detectada es Preparados');
                         readText('Preparados');
                         break;
                     case "Preparado":
-                        console.log('La palabra detectada es Preparado');
                         readText('Preparados');
                         break;
                     case "Foto":
-                        console.log('La palabra detectada es Foto');
                         readText('Foto');
                         break;
                     case "Ruido de fondo":
-                        console.log('La palabra detectada es Ruido de fondo');
                         break;
                     default:
-                        console.log('Default, Ni idea q ha detectado');
                         break;
                 }
             }
@@ -104,9 +99,9 @@ async function getAccessWebcam() {
                 audio: true,
                 video: true
             })
-            .then(function (stream) {
-                video.srcObject = stream;
-            }).catch(function (error) {
+            .then( function (stream) {
+                VIDEO_ELEMENT.srcObject = stream;
+            }).catch( function (error) {
                 console.error('Se ha producido un error al acceder a la webcam. :(');
             });
         return;
@@ -121,10 +116,6 @@ async function getAudioAndWebcam() {
 }
 
 async function makeImgTensor() {
-    //Primero le indicamos el batch (q solo va a procesar 1 img a la vez)
-    //La transformamos a 192x192 para q movenet puede trabajar con la img
-    // Le pasamos los 3 canales d color (RGB)
-    console.log('Canvas');
     //Creamos un tensor con la img q ya está almacenada en el canvas
     let imgTensor = tf.browser.fromPixels(ORIGINAL_CANVAS);
     console.log('Forma del tensor de la imagen: ', imgTensor.shape); // [480, 640, 3]
@@ -144,7 +135,6 @@ async function makeImgTensor() {
     //Como la img continua siendo muy grande, le aplicamos un resizeBilinear
     let resizedTensor = tf.image.resizeBilinear(croppedTensor, [192, 192], true).toInt();
     console.log('Tensor ajustado con su resize:', croppedTensor.shape);
-
 
     if(movenet != undefined) {
     //Expandimos las dimensiones para añadir la q falta al comienzo
@@ -181,12 +171,6 @@ function drawKeypoints(keypoints, canvas, scale) {
     ctx.fillStyle = "#4F9D69";
     ctx.lineWidth = 2;
 
-    console.log('Posición Ojo izq' , keypoints[1]);
-    console.log('Posición Ojo dch' , keypoints[2]);
-    console.log('Posición nariz' , keypoints[0]);
-    console.log('Posición muñeca izq' , keypoints[9]);
-    console.log('Posición muñeca derecha' , keypoints[10]);
-
     if(keypoints[9][0] <= keypoints[2][0] || keypoints[10][0] <= keypoints[1][0]) {
         console.log('Manos encima cabeza');
         ctx.fillStyle = "#D84654";
@@ -204,20 +188,20 @@ function drawKeypoints(keypoints, canvas, scale) {
     console.log('Acabo d dibujar keypoints');
 }
 
-
-
 async function takePhoto() {
-    console.log('tomando fotooooo :)))');
-    
     const ctxCanvas = ORIGINAL_CANVAS.getContext("2d");
-    ORIGINAL_CANVAS.width = video.videoWidth;
-    ORIGINAL_CANVAS.height = video.videoHeight;
-    ctxCanvas.drawImage(video, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height);
+    ORIGINAL_CANVAS.width = VIDEO_ELEMENT.videoWidth;
+    ORIGINAL_CANVAS.height = VIDEO_ELEMENT.videoHeight;
+    ctxCanvas.drawImage(VIDEO_ELEMENT, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height)
+
+    VIDEO_OVERLAY.classList.remove('takePhoto');
 
     makeImgTensor();
 }
 
 async function readText(type) {
+    VIDEO_OVERLAY.classList.add('takePhoto');
+
 let message = '';
     switch(type) {
         case "Foto":
