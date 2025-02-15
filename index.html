@@ -22,6 +22,8 @@
                     </span>
                     <br>
                     Es un proyecto que combina el uso de IA para el reconocimiento de comandos por voz y procesamiento de imágenes.
+                    Concretamente se utiliza <a target="_blank" href="https://www.tensorflow.org/hub/tutorials/movenet?hl=es-419">MoveNet</a> para detectar los keypoints del cuerpo 
+                    y para la detección de palabras <a target="_blank" href="https://teachablemachine.withgoogle.com/">Teachable Machine</a> de Google.
                 </p>
 
                 <div id="label-container"></div>
@@ -31,7 +33,6 @@
             <button onclick="readText('Foto')">Activar Patata</button>
             <button onclick="readText('Preparados')">Activar Preparados</button>
             <button onclick="takePhoto()">Tomar foto</button>
-
 
             <div class="video-container">
                 <div id="videoOverlay">Tomando foto...

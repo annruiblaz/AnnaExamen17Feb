@@ -87,9 +87,6 @@ async function init() {
         invokeCallbackOnNoiseAndUnknown: true,
         overlapFactor: 0.50 // probably want between 0.5 and 0.75. More info in README
     });
-
-    // Stop the recognition in 5 seconds.
-    // setTimeout(() => recognizer.stopListening(), 5000);
 }
 
 //Para acceder a la webcam y audio
@@ -115,6 +112,61 @@ async function getAudioAndWebcam() {
     getAccessWebcam();
 }
 
+//Metodo q hace la capt del stream y lo pinta en el canvas d captura
+async function takePhoto() {
+    const ctxCanvas = ORIGINAL_CANVAS.getContext("2d");
+    ORIGINAL_CANVAS.width = VIDEO_ELEMENT.videoWidth;
+    ORIGINAL_CANVAS.height = VIDEO_ELEMENT.videoHeight;
+    ctxCanvas.drawImage(VIDEO_ELEMENT, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height)
+
+    //**Ignoralo: es para la animacion :)
+    VIDEO_OVERLAY.classList.remove('takePhoto');
+
+    //funcion q crea el tensor d la img para hacer la predicción
+    makeImgTensor();
+}
+
+//Lee el texto segun lo q dice el user
+async function readText(type) {
+    //**Ignoralo: es para la animacion :)
+    VIDEO_OVERLAY.classList.add('takePhoto');
+    let message = '';
+
+    //Recorremos lo q puede llegar en el tipo d comando detectado y en base a ello l añadimos el texto q corresponde
+        switch(type) {
+            case "Foto":
+                message = 'Patata';
+                break;
+            case "Preparados":
+                message = 'listos ya ¡Patata!';
+                break;
+            default:
+                message = 'Se ha producido un error';
+                break;
+        }
+
+    //Creamos el obj d síntesis d voz
+    const readText = new SpeechSynthesisUtterance(message);
+
+    //configuramos las opciones d voz
+    readText.lang = 'es-ES';
+    readText.rate = .85;
+    readText.pitch = 1;
+    readText.volume = 1;
+
+    speechSynthesis.speak(readText);
+
+    //Una vez acaba d leer el texto comprueba si debe añadir el delay
+    readText.onend = () => {
+        if(type === 'Preparados') {
+            setTimeout(takePhoto, 5000);
+        } else {
+            takePhoto();
+        }
+    }
+}
+
+//Metodo en el q creamos el tensor con la img y hacemos predicciones con movenet
 async function makeImgTensor() {
     //Creamos un tensor con la img q ya está almacenada en el canvas
     let imgTensor = tf.browser.fromPixels(ORIGINAL_CANVAS);
@@ -147,10 +199,8 @@ async function makeImgTensor() {
     //Verificamos si el output d predicciones tiene keypoints
     if( arrayOutput.length > 0 && arrayOutput[0][0]) {
         let keypoints = arrayOutput[0][0]; //Almacenamos los keypoints
+        //Llamamos al metodo q pinta los keypoints en el canvas
         drawKeypoints(keypoints, CROPPED_CANVAS, cropSize[0] / 192);
-            //Mostramos la img recortada en el canvas
-        //await tf.browser.toPixels(resizedTensor, CROPPED_CANVAS);
-
     } else {
         console.error('No se han encontrado keypoints.');
     }
@@ -163,19 +213,20 @@ async function makeImgTensor() {
     //tensorOutput.dispose();
 }
 
-
 //Dibujamos los puntos clave en el canvas
 function drawKeypoints(keypoints, canvas, scale) {
     const ctx = canvas.getContext("2d");
-    // ** ToDo: Lógica q cambie el color del punto en base a la posición d las mannos con la cabezaaaaaaaaaaaa
-    ctx.fillStyle = "#4F9D69";
+    ctx.fillStyle = "#4F9D69"; //Xdefecto comienza en verde
     ctx.lineWidth = 2;
 
+    //Comprobamos si las manos estan x encima d su cabeza comparando los valores en el eje y
+    // muñeca izq           ojo derecho      muñeca derechaa     ojo izq
     if(keypoints[9][0] <= keypoints[2][0] || keypoints[10][0] <= keypoints[1][0]) {
         console.log('Manos encima cabeza');
         ctx.fillStyle = "#D84654";
     }
 
+    //Recorremos los keypoints para sacar las coordenadas y marcar los circulos
     keypoints.forEach( point => {
         let x = point[1] * 192 * scale;
         let y = point[0] * 192 * scale;
@@ -184,54 +235,5 @@ function drawKeypoints(keypoints, canvas, scale) {
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
         ctx.fill();
     });
-
-    console.log('Acabo d dibujar keypoints');
-}
-
-async function takePhoto() {
-    const ctxCanvas = ORIGINAL_CANVAS.getContext("2d");
-    ORIGINAL_CANVAS.width = VIDEO_ELEMENT.videoWidth;
-    ORIGINAL_CANVAS.height = VIDEO_ELEMENT.videoHeight;
-    ctxCanvas.drawImage(VIDEO_ELEMENT, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height)
-
-    VIDEO_OVERLAY.classList.remove('takePhoto');
-
-    makeImgTensor();
-}
-
-async function readText(type) {
-    VIDEO_OVERLAY.classList.add('takePhoto');
-
-let message = '';
-    switch(type) {
-        case "Foto":
-            message = 'Patata';
-            break;
-        case "Preparados":
-            message = 'listos ya ¡Patata!';
-            break;
-        default:
-            message = 'Error perooo di patata';
-            break;
-    }
-
-    //Creamos el obj d síntesis d voz
-    const readText = new SpeechSynthesisUtterance(message);
-
-    //configuramos las opciones
-    readText.lang = 'es-ES';
-    readText.rate = .85;
-    readText.pitch = 1;
-    readText.volume = 1;
-
-    speechSynthesis.speak(readText);
-
-    readText.onend = () => {
-        if(type === 'Preparados') {
-            setTimeout(takePhoto, 5000);
-        } else {
-            takePhoto();
-        }
-    }
 }
 
