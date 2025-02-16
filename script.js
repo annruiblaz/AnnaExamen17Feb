@@ -49,7 +49,10 @@ async function init() {
     const classLabels = recognizer.wordLabels(); // get class labels
     const labelContainer = document.getElementById("label-container");
     for (let i = 0; i < classLabels.length; i++) {
-        labelContainer.appendChild(document.createElement("div"));
+        let div = document.createElement("div");
+        div.style.padding = '5px';
+        div.textContent = `${classLabels[i]}: 0.00`;
+        labelContainer.appendChild(div);
     }
 
     // listen() takes two arguments:
@@ -94,13 +97,20 @@ async function getAccessWebcam() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
                 audio: true,
-                video: true
+                video: {
+                    width: 800,
+                    height: 600
+                }
             })
             .then( function (stream) {
                 VIDEO_ELEMENT.srcObject = stream;
             }).catch( function (error) {
                 console.error('Se ha producido un error al acceder a la webcam. :(');
             });
+
+        //Oculto el btn una vez concede los permisos
+        document.getElementById('allowAccess').classList.add('disabled');
+        document.querySelector('.position-marker').classList.add('visible');
         return;
     }
     console.error('Tu navegador no es compatible.');
@@ -121,6 +131,9 @@ async function takePhoto() {
 
     //**Ignoralo: es para la animacion :)
     VIDEO_OVERLAY.classList.remove('takePhoto');
+    setTimeout( () => {
+        document.querySelector('.position-marker').classList.add('visible');
+        }, 1000 );
 
     //funcion q crea el tensor d la img para hacer la predicción
     makeImgTensor();
@@ -129,16 +142,36 @@ async function takePhoto() {
 //Lee el texto segun lo q dice el user
 async function readText(type) {
     //**Ignoralo: es para la animacion :)
-    VIDEO_OVERLAY.classList.add('takePhoto');
+    setTimeout( () => {
+        VIDEO_OVERLAY.classList.add('takePhoto');
+    }, 500 );
+    document.querySelector('.position-marker').classList.remove('visible');
+
     let message = '';
 
     //Recorremos lo q puede llegar en el tipo d comando detectado y en base a ello l añadimos el texto q corresponde
         switch(type) {
             case "Foto":
                 message = 'Patata';
+                document.querySelector('.video-overlay-text').textContent = 'Tomando foto...';
                 break;
             case "Preparados":
                 message = 'listos ya ¡Patata!';
+                //** IGNORALOO: es para la animacion d segundos en el overlay
+                let seconds = 5;
+                var countdown = setInterval( function() {
+                    console.log('Seconds antes de if', seconds)
+                    if(seconds <= 0) {
+                        document.querySelector('.video-overlay-text').textContent = 'Tomando foto...';
+                        clearInterval(countdown);
+                    } else {
+                        document.querySelector('.video-overlay-text').textContent = seconds;
+                    }
+                    seconds -=1;
+                }, 1000);
+                
+                //**Ignoralo animaciooon
+                document.querySelector('.video-overlay-text').textContent = '';
                 break;
             default:
                 message = 'Se ha producido un error';
@@ -174,7 +207,7 @@ async function makeImgTensor() {
 
     //Recortamos la img para q cuadre con el formato esperado x movenet [1, 192, 192, 3]
     //Establecemos el punto d incio para el recorte d la img [y, x, canal] (El canal está a 0 xq queremos q incluya los 3 canales)
-    let cropStartPoint = [15, 170, 0];
+    let cropStartPoint = [90, 160, 0];
     //Asignamos el tamaño del recorte [alto, ancho, canales]
     let cropSize = [345, 345, 3];
 
@@ -235,5 +268,11 @@ function drawKeypoints(keypoints, canvas, scale) {
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
         ctx.fill();
     });
+}
+
+function handlerOverlayText() {
+    
+
+    return text;
 }
 

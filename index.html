@@ -16,17 +16,13 @@
             <div class="header-container">
                 <h1 class="header-title">Captura foto con IA y comandos de voz</h1>
                 <h2 class="header-subtitle">Di "Preparados" o "Foto" y deja que la magia suceda.</h2>
+                <span class="extra-info-title">¿En qué consiste?</span>
                 <p class="header-extra-info">
-                    <span class="extra-info-title">
-                        ¿En qué consiste?
-                    </span>
-                    <br>
                     Es un proyecto que combina el uso de IA para el reconocimiento de comandos por voz y procesamiento de imágenes.
                     Concretamente se utiliza <a target="_blank" href="https://www.tensorflow.org/hub/tutorials/movenet?hl=es-419">MoveNet</a> para detectar los keypoints del cuerpo 
                     y para la detección de palabras <a target="_blank" href="https://teachablemachine.withgoogle.com/">Teachable Machine</a> de Google.
                 </p>
 
-                <div id="label-container"></div>
                 <button id="allowAccess" onclick="getAudioAndWebcam()">Activar micrófono y cámara</button>
             </div>
 
@@ -34,27 +30,33 @@
             <button onclick="readText('Preparados')">Activar Preparados</button>
             <button onclick="takePhoto()">Tomar foto</button>
 
-            <div class="video-container">
-                <div id="videoOverlay">Tomando foto...
-                    <svg width="41" height="40" viewBox="0 0 41 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20.7285 3.33337V10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M27.7285 13L32.5618 8.16663" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M30.7285 20H37.3952" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M27.7285 27L32.5618 31.8333" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M20.7285 30V36.6667" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8.89526 31.8333L13.7286 27" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M4.06177 20H10.7284" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8.89526 8.16663L13.7286 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+            <div class="img-container">
+                <div class="video-container">
+                    <div id="videoOverlay">
+                        <div class="video-overlay-text">
+                           
+                        </div>
+                        <svg width="41" height="40" viewBox="0 0 41 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20.7285 3.33337V10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M27.7285 13L32.5618 8.16663" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M30.7285 20H37.3952" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M27.7285 27L32.5618 31.8333" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M20.7285 30V36.6667" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.89526 31.8333L13.7286 27" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4.06177 20H10.7284" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8.89526 8.16663L13.7286 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                    </div>
+                    <div id="label-container"></div>
+                    <img class="position-marker" src="assets/marker_position.png">
+                    <video id="videoElement" autoplay></video>
                 </div>
-                <video id="videoElement" autoplay></video>
-            </div>
-
-            <div class="canvas-container">
-                <canvas id="canvasPicture"></canvas>
-
-                <canvas id="croppedCanvas"></canvas>
-
+                
+                <h3>Resultados</h3>
+                <div class="canvas-container">
+                    <canvas id="canvasPicture"></canvas>
+                    <canvas id="croppedCanvas"></canvas>
+                </div>
             </div>
         </div>
 
