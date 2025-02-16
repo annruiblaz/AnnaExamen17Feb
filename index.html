@@ -26,15 +26,10 @@
                 <button id="allowAccess" onclick="getAudioAndWebcam()">Activar micrófono y cámara</button>
             </div>
 
-            <button onclick="readText('Foto')">Activar Patata</button>
-            <button onclick="readText('Preparados')">Activar Preparados</button>
-            <button onclick="takePhoto()">Tomar foto</button>
-
             <div class="img-container">
                 <div class="video-container">
                     <div id="videoOverlay">
                         <div class="video-overlay-text">
-                           
                         </div>
                         <svg width="41" height="40" viewBox="0 0 41 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20.7285 3.33337V10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -49,7 +44,7 @@
                     </div>
                     <div id="label-container"></div>
                     <img class="position-marker" src="assets/marker_position.png">
-                    <video id="videoElement" autoplay></video>
+                    <video id="videoElement" autoplay muted></video>
                 </div>
                 
                 <h3>Resultados</h3>

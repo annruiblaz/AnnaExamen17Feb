@@ -12,8 +12,6 @@ const VIDEO_OVERLAY = document.getElementById('videoOverlay');
 const ORIGINAL_CANVAS = document.getElementById('canvasPicture');
 const CROPPED_CANVAS = document.getElementById('croppedCanvas');
 
-
-
 //Carga e inicializa el modelo d MoveNet
 async function loadMovenet() {
     //Lo cargamos dsd TensorFlow Hub x eso el true
@@ -50,28 +48,26 @@ async function init() {
     const labelContainer = document.getElementById("label-container");
     for (let i = 0; i < classLabels.length; i++) {
         let div = document.createElement("div");
+        //Para q quede mejor al mostrarlo en el video
         div.style.padding = '5px';
         div.textContent = `${classLabels[i]}: 0.00`;
         labelContainer.appendChild(div);
     }
 
-    // listen() takes two arguments:
-    // 1. A callback function that is invoked anytime a word is recognized.
-    // 2. A configuration object with adjustable fields
+    // listen() debe recibir 2 argumentos:
+    // 1. un callback q se ejecuta cada vez q reconoce una palabra
+    // 2. Un obj con su config
     recognizer.listen(result => {
-        const scores = result.scores; // probability of prediction for each class
-        // render the probability scores per class
+        const scores = result.scores; // probabilidad d q sea X clase
+        // mostramos los resultados con el nombre d la clase ("comando") a realizar y la probabilidad
         for (let i = 0; i < classLabels.length; i++) {
             const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
             labelContainer.childNodes[i].innerHTML = classPrediction;
 
             //Nos aseguramos q tiene una certeza decente para hacer la foto
-            if (result.scores[i].toFixed(2) > 0.7) {
+            if (result.scores[i].toFixed(2) > 0.8) {
                 switch (classLabels[i]) {
                     case "Preparados":
-                        readText('Preparados');
-                        break;
-                    case "Preparado":
                         readText('Preparados');
                         break;
                     case "Foto":
@@ -127,7 +123,7 @@ async function takePhoto() {
     const ctxCanvas = ORIGINAL_CANVAS.getContext("2d");
     ORIGINAL_CANVAS.width = VIDEO_ELEMENT.videoWidth;
     ORIGINAL_CANVAS.height = VIDEO_ELEMENT.videoHeight;
-    ctxCanvas.drawImage(VIDEO_ELEMENT, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height)
+    ctxCanvas.drawImage(VIDEO_ELEMENT, 0, 0, ORIGINAL_CANVAS.width, ORIGINAL_CANVAS.height);
 
     //**Ignoralo: es para la animacion :)
     VIDEO_OVERLAY.classList.remove('takePhoto');
@@ -160,7 +156,6 @@ async function readText(type) {
                 //** IGNORALOO: es para la animacion d segundos en el overlay
                 let seconds = 5;
                 var countdown = setInterval( function() {
-                    console.log('Seconds antes de if', seconds)
                     if(seconds <= 0) {
                         document.querySelector('.video-overlay-text').textContent = 'Tomando foto...';
                         clearInterval(countdown);
@@ -169,8 +164,8 @@ async function readText(type) {
                     }
                     seconds -=1;
                 }, 1000);
-                
-                //**Ignoralo animaciooon
+
+                //**Ignoralo tmb es animaciooon
                 document.querySelector('.video-overlay-text').textContent = '';
                 break;
             default:
@@ -183,7 +178,7 @@ async function readText(type) {
 
     //configuramos las opciones d voz
     readText.lang = 'es-ES';
-    readText.rate = .85;
+    readText.rate = .75;
     readText.pitch = 1;
     readText.volume = 1;
 
@@ -243,7 +238,6 @@ async function makeImgTensor() {
     imgTensor.dispose();
     croppedTensor.dispose();
     resizedTensor.dispose();
-    //tensorOutput.dispose();
 }
 
 //Dibujamos los puntos clave en el canvas
@@ -255,7 +249,7 @@ function drawKeypoints(keypoints, canvas, scale) {
     //Comprobamos si las manos estan x encima d su cabeza comparando los valores en el eje y
     // muñeca izq           ojo derecho      muñeca derechaa     ojo izq
     if(keypoints[9][0] <= keypoints[2][0] || keypoints[10][0] <= keypoints[1][0]) {
-        console.log('Manos encima cabeza');
+        console.log('Manos  x encima cabeza');
         ctx.fillStyle = "#D84654";
     }
 
@@ -268,11 +262,5 @@ function drawKeypoints(keypoints, canvas, scale) {
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
         ctx.fill();
     });
-}
-
-function handlerOverlayText() {
-    
-
-    return text;
 }
 
