@@ -4,6 +4,9 @@ const MODEL_PATH = 'https://tfhub.dev/google/tfjs-model/movenet/singlepose/light
 //Declaramos la variable global para almacenar el modelo
 let movenet = undefined;
 
+//Para manejar si debe escuchar nuevos comandos
+let canListen = true;
+
 //Ruta al modelo de Teachable Machine
 const URL = "http://127.0.0.1:5500/Modelo/";
 //Almacenamos ref al HTMLElement d video y el canvas
@@ -46,6 +49,7 @@ async function init() {
     const recognizer = await createModel();
     const classLabels = recognizer.wordLabels(); // get class labels
     const labelContainer = document.getElementById("label-container");
+
     for (let i = 0; i < classLabels.length; i++) {
         let div = document.createElement("div");
         //Para q quede mejor al mostrarlo en el video
@@ -58,6 +62,9 @@ async function init() {
     // 1. un callback q se ejecuta cada vez q reconoce una palabra
     // 2. Un obj con su config
     recognizer.listen(result => {
+        //Para evitar q se ejecute varias veces
+        if (!canListen) return;
+
         const scores = result.scores; // probabilidad d q sea X clase
         // mostramos los resultados con el nombre d la clase ("comando") a realizar y la probabilidad
         for (let i = 0; i < classLabels.length; i++) {
@@ -65,7 +72,7 @@ async function init() {
             labelContainer.childNodes[i].innerHTML = classPrediction;
 
             //Nos aseguramos q tiene una certeza decente para hacer la foto
-            if (result.scores[i].toFixed(2) > 0.8) {
+            if (result.scores[i].toFixed(2) >= 0.8) {
                 switch (classLabels[i]) {
                     case "Preparados":
                         readText('Preparados');
@@ -137,6 +144,10 @@ async function takePhoto() {
 
 //Lee el texto segun lo q dice el user
 async function readText(type) {
+    //Para q no lea el texto varias veces mientras toma una foto
+    if (!canListen) return;
+    canListen = false;
+
     //**Ignoralo: es para la animacion :)
     setTimeout( () => {
         VIDEO_OVERLAY.classList.add('takePhoto');
@@ -178,7 +189,7 @@ async function readText(type) {
 
     //configuramos las opciones d voz
     readText.lang = 'es-ES';
-    readText.rate = .75;
+    readText.rate = .7;
     readText.pitch = 1;
     readText.volume = 1;
 
@@ -187,9 +198,13 @@ async function readText(type) {
     //Una vez acaba d leer el texto comprueba si debe añadir el delay
     readText.onend = () => {
         if(type === 'Preparados') {
-            setTimeout(takePhoto, 5000);
+            setTimeout( () => {
+                takePhoto();
+                canListen = true;
+            }, 5000);
         } else {
             takePhoto();
+            canListen = true;
         }
     }
 }
