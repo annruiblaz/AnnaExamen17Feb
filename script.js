@@ -8,7 +8,7 @@ let movenet = undefined;
 let canListen = true;
 
 //Ruta al modelo de Teachable Machine
-const URL = "http://127.0.0.1:5500/Modelo/";
+const URL = "./Modelo/";
 //Almacenamos ref al HTMLElement d video y el canvas
 const VIDEO_ELEMENT = document.getElementById('videoElement');
 const VIDEO_OVERLAY = document.getElementById('videoOverlay');
